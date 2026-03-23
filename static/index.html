@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<title>MAnalyzer - Medical Report Analyzer</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --danger: #dc2626;
+    --warning: #f59e0b;
+    --success: #16a34a;
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ---- Header ---- */
+  header {
+    background: linear-gradient(135deg, #1e40af, #3b82f6);
+    color: #fff;
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  }
+  header svg { width: 32px; height: 32px; }
+  header h1 { font-size: 1.4rem; font-weight: 600; }
+  header span { font-size: 0.85rem; opacity: 0.8; margin-left: auto; }
+
+  /* ---- Layout ---- */
+  .container {
+    max-width: 1100px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    border: 1px solid var(--border);
+  }
+  .card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card h2 .icon { font-size: 1.3rem; }
+
+  /* ---- Upload ---- */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 2.5rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--primary);
+    background: #eff6ff;
+  }
+  .upload-zone input { display: none; }
+  .upload-zone p { color: var(--text-muted); margin-top: 0.5rem; font-size: 0.9rem; }
+  .upload-zone .big { font-size: 2.5rem; }
+
+  .file-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    font-size: 0.9rem;
+  }
+  .file-info .name { font-weight: 600; }
+  .file-info .size { color: var(--text-muted); }
+
+  /* ---- Buttons ---- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.25rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
+  .btn-outline {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text);
+  }
+  .btn-outline:hover { background: #f8fafc; }
+
+  .btn-row { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+
+  /* ---- Patient banner ---- */
+  .patient-banner {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+    background: #f0f9ff;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+  .patient-banner .field label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+  .patient-banner .field p { font-weight: 600; margin-top: 2px; }
+
+  /* ---- Stats row ---- */
+  .stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .stat-box {
+    flex: 1;
+    min-width: 120px;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .stat-box .num { font-size: 1.8rem; font-weight: 700; }
+  .stat-box .label { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+  .stat-total { background: #eff6ff; }
+  .stat-total .num { color: var(--primary); }
+  .stat-normal { background: #f0fdf4; }
+  .stat-normal .num { color: var(--success); }
+  .stat-abnormal { background: #fef2f2; }
+  .stat-abnormal .num { color: var(--danger); }
+
+  /* ---- Results table ---- */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  th, td { padding: 0.6rem 0.75rem; text-align: left; }
+  th {
+    background: #f8fafc;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--border);
+  }
+  td { border-bottom: 1px solid var(--border); }
+  tr:hover td { background: #fafbfc; }
+
+  .flag-normal { color: var(--success); font-weight: 500; }
+  .flag-high { color: var(--danger); font-weight: 600; }
+  .flag-low { color: var(--warning); font-weight: 600; }
+  .flag-critical_high, .flag-critical_low { color: var(--danger); font-weight: 700; background: #fef2f2; }
+  .flag-abnormal { color: var(--danger); font-weight: 600; }
+
+  /* ---- Chat ---- */
+  .chat-area {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .chat-messages {
+    max-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem;
+  }
+  .msg {
+    max-width: 85%;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+  .msg-user { white-space: pre-wrap; }
+  .msg-user {
+    align-self: flex-end;
+    background: var(--primary);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .msg-ai {
+    align-self: flex-start;
+    background: #f1f5f9;
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+    max-width: 90%;
+  }
+  .msg-ai p { margin: 0.3rem 0; }
+  .msg-ai ul, .msg-ai ol { margin: 0.3rem 0 0.3rem 1.2rem; }
+  .msg-ai li { margin: 0.15rem 0; }
+  .msg-ai strong { font-weight: 600; }
+  .msg-ai h1, .msg-ai h2, .msg-ai h3, .msg-ai h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0.6rem 0 0.25rem;
+    color: var(--text);
+  }
+  .msg-ai h1 { font-size: 1.05rem; }
+  .msg-ai code {
+    background: #e2e8f0;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.82rem;
+  }
+  .msg-disclaimer {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 0.5rem 0.75rem;
+    background: #fffbeb;
+    border-left: 3px solid var(--warning);
+    border-radius: 0 6px 6px 0;
+  }
+
+  .chat-input-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .chat-input-row input {
+    flex: 1;
+    padding: 0.65rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .chat-input-row input:focus { border-color: var(--primary); }
+
+  .provider-select {
+    padding: 0.5rem 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    background: #fff;
+    outline: none;
+  }
+
+  /* ---- Spinner (buttons) ---- */
+  .spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2.5px solid #e2e8f0;
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---- AI Thinking Indicator ---- */
+  .ai-thinking {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.2rem 0;
+  }
+  .ai-thinking-dots {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .ai-thinking-dots span {
+    width: 8px; height: 8px;
+    background: var(--primary);
+    border-radius: 50%;
+    animation: dotPulse 1.4s ease-in-out infinite;
+  }
+  .ai-thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .ai-thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dotPulse {
+    0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1.1); }
+  }
+  .ai-thinking-text {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* ---- Mic Button ---- */
+  .btn-mic {
+    width: 40px; height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: #f1f5f9;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .2s;
+    flex-shrink: 0;
+    color: var(--text-muted);
+  }
+  .btn-mic .material-icons { font-size: 22px; }
+  .btn-mic:hover { background: #e2e8f0; color: var(--text); }
+  .btn-mic.recording {
+    background: #fee2e2;
+    color: var(--danger);
+    animation: micPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes micPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,.4); }
+    50% { box-shadow: 0 0 0 10px rgba(220,38,38,0); }
+  }
+
+  /* ---- Language Toggle ---- */
+  .btn-lang {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--border);
+    border-radius: 50%;
+    background: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .2s;
+    flex-shrink: 0;
+    color: var(--text-muted);
+    letter-spacing: .3px;
+  }
+  .btn-lang:hover { background: #f1f5f9; }
+  .btn-lang.active-hi {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #92400e;
+  }
+
+  /* ---- Speaker Button ---- */
+  .btn-speak {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    margin-top: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    transition: all .15s;
+  }
+  .btn-speak .material-icons { font-size: 16px; }
+  .btn-speak:hover { background: #f1f5f9; color: var(--text); }
+  .btn-speak.speaking {
+    color: #fff;
+    border-color: var(--danger);
+    background: var(--danger);
+  }
+  .btn-speak.speaking:hover {
+    background: #b91c1c;
+    color: #fff;
+  }
+
+  /* ---- Disclaimer bar ---- */
+  .disclaimer-bar {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    line-height: 1.5;
+  }
+
+  /* ---- Settings button ---- */
+  .btn-settings {
+    background: none;
+    border: 2px solid rgba(255,255,255,.3);
+    border-radius: 8px;
+    color: #fff;
+    padding: 0.35rem 0.6rem;
+    cursor: pointer;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-left: 0.5rem;
+  }
+  .btn-settings .material-icons { font-size: 20px; }
+  .btn-settings:hover { border-color: #fff; background: rgba(255,255,255,.1); }
+  .btn-settings .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-green { background: #4ade80; }
+  .dot-gray { background: #94a3b8; }
+
+  /* ---- Modal ---- */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .modal {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    width: 90%;
+    max-width: 460px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  }
+  .modal h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+  }
+  .modal .subtitle {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+  .modal label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    color: var(--text);
+  }
+  .modal input[type="password"],
+  .modal select {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.88rem;
+    outline: none;
+    margin-bottom: 0.75rem;
+    transition: border-color .15s;
+  }
+  .modal input:focus { border-color: var(--primary); }
+  .modal .btn-row { margin-top: 0.5rem; justify-content: flex-end; }
+  .modal .status-msg {
+    font-size: 0.82rem;
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+  }
+  .status-ok { background: #f0fdf4; color: var(--success); }
+  .status-err { background: #fef2f2; color: var(--danger); }
+
+  /* ---- Hidden ---- */
+  .hidden { display: none !important; }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 600px) {
+    header { padding: 1rem; }
+    .container { padding: 0 1rem; }
+    .msg { max-width: 95%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 2h6l3 7H6L9 2z"/><rect x="3" y="9" width="18" height="13" rx="2"/><path d="M9 14h6"/><path d="M12 11v6"/>
+  </svg>
+  <h1>MAnalyzer</h1>
+  <span>Medical Report Analyzer</span>
+  <button class="btn-settings" id="settingsBtn" title="API Key Settings">
+    <span class="material-icons">settings</span> <span class="dot dot-gray" id="keyDot"></span>
+  </button>
+</header>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay hidden" id="settingsModal">
+  <div class="modal">
+    <h3><span class="material-icons" style="font-size:20px;vertical-align:middle;margin-right:4px">vpn_key</span> API Key Settings</h3>
+    <p class="subtitle">Your key is encrypted server-side and stored only in this browser tab. It is never saved on the server.</p>
+
+    <label for="keyProvider">Provider</label>
+    <select id="keyProvider">
+      <option value="openai">OpenAI</option>
+      <option value="claude">Claude (Anthropic)</option>
+    </select>
+
+    <label for="keyInput">API Key</label>
+    <input type="password" id="keyInput" placeholder="sk-... or sk-ant-...">
+
+    <div id="keyStatus"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-outline" id="keyClearBtn">Clear Key</button>
+      <button class="btn btn-outline" id="keyCloseBtn">Cancel</button>
+      <button class="btn btn-primary" id="keySaveBtn">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- UPLOAD CARD -->
+  <div class="card" id="uploadCard">
+    <h2><span class="icon"><span class="material-icons">cloud_upload</span></span> Upload Medical Report</h2>
+    <div class="upload-zone" id="dropZone">
+      <div class="big"><span class="material-icons" style="font-size:2.5rem;color:var(--primary)">description</span></div>
+      <p><strong>Drop a file here</strong> or click to browse</p>
+      <p>Supports CSV, JSON, TXT, PDF</p>
+      <input type="file" id="fileInput" accept=".csv,.json,.txt,.pdf">
+    </div>
+    <div class="file-info hidden" id="fileInfo">
+      <span class="material-icons" style="font-size:18px;color:var(--text-muted)">attach_file</span>
+      <span class="name" id="fileName"></span>
+      <span class="size" id="fileSize"></span>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="uploadBtn" disabled>Upload &amp; Analyze</button>
+      <button class="btn btn-outline hidden" id="clearBtn">Clear</button>
+    </div>
+  </div>
+
+  <!-- RESULTS CARD -->
+  <div class="card hidden" id="resultsCard">
+    <h2><span class="icon"><span class="material-icons">biotech</span></span> Report Results</h2>
+
+    <div class="patient-banner" id="patientBanner"></div>
+
+    <div class="stats" id="statsRow"></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead id="resultsHead"></thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-outline" id="summaryBtn">View Full Summary</button>
+      <button class="btn btn-outline" id="newReportBtn">Upload Another Report</button>
+    </div>
+  </div>
+
+  <!-- CHAT CARD (always visible) -->
+  <div class="card" id="chatCard">
+    <h2><span class="icon"><span class="material-icons">medical_services</span></span> <span id="chatTitle">Ask AI Doctor</span></h2>
+    <p id="chatSubtitle" style="font-size:0.85rem;color:var(--text-muted);margin:-0.5rem 0 1rem">Describe your symptoms or ask any health-related question. Upload a report above for report-specific analysis.</p>
+
+    <div class="chat-area">
+      <div class="chat-messages" id="chatMessages"></div>
+
+      <div class="chat-input-row">
+        <select class="provider-select" id="providerSelect">
+          <option value="">Default Provider</option>
+          <option value="openai">OpenAI</option>
+          <option value="claude">Claude</option>
+        </select>
+        <input type="text" id="chatInput" placeholder="e.g. I have a headache and mild fever since 2 days...">
+        <button class="btn-lang" id="langToggle" title="Switch speech language (EN/HI)">EN</button>
+        <button class="btn-mic" id="micBtn" title="Hold to speak"><span class="material-icons">mic</span></button>
+        <button class="btn btn-primary" id="sendBtn">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer-bar hidden" id="disclaimerBar"></div>
+
+</div>
+
+<script>
+const API = window.location.origin;
+let sessionId = null;
+let selectedFile = null;
+
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+// ---- API Key Settings ----
+function getLLMToken() { return sessionStorage.getItem("llm_token") || ""; }
+function setLLMToken(t) { sessionStorage.setItem("llm_token", t); updateKeyDot(); }
+function clearLLMToken() { sessionStorage.removeItem("llm_token"); updateKeyDot(); }
+function updateKeyDot() {
+  const dot = $("#keyDot");
+  if (getLLMToken()) { dot.className = "dot dot-green"; }
+  else { dot.className = "dot dot-gray"; }
+}
+function llmHeaders() {
+  const h = { "Content-Type": "application/json" };
+  const t = getLLMToken();
+  if (t) h["X-LLM-Key"] = t;
+  return h;
+}
+updateKeyDot();
+
+$("#settingsBtn").addEventListener("click", () => {
+  $("#settingsModal").classList.remove("hidden");
+  $("#keyInput").value = "";
+  $("#keyStatus").innerHTML = "";
+  if (getLLMToken()) {
+    $("#keyStatus").innerHTML = '<div class="status-msg status-ok">A key is currently saved for this tab.</div>';
+  }
+});
+$("#keyCloseBtn").addEventListener("click", () => $("#settingsModal").classList.add("hidden"));
+$("#settingsModal").addEventListener("click", (e) => {
+  if (e.target === $("#settingsModal")) $("#settingsModal").classList.add("hidden");
+});
+
+$("#keySaveBtn").addEventListener("click", async () => {
+  const key = $("#keyInput").value.trim();
+  const provider = $("#keyProvider").value;
+  if (!key) { $("#keyStatus").innerHTML = '<div class="status-msg status-err">Please enter an API key.</div>'; return; }
+
+  const btn = $("#keySaveBtn");
+  btn.disabled = true;
+  btn.textContent = "Encrypting...";
+
+  try {
+    const res = await fetch(`${API}/api/encrypt-key`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, provider }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Encryption failed");
+    }
+    const data = await res.json();
+    setLLMToken(data.token);
+    $("#keyInput").value = "";
+    $("#keyStatus").innerHTML = '<div class="status-msg status-ok">Key encrypted and saved for this session.</div>';
+    $("#providerSelect").value = provider;
+  } catch (e) {
+    $("#keyStatus").innerHTML = `<div class="status-msg status-err">${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Save Key";
+  }
+});
+
+$("#keyClearBtn").addEventListener("click", () => {
+  clearLLMToken();
+  $("#keyInput").value = "";
+  $("#keyStatus").innerHTML = '<div class="status-msg status-ok">Key cleared. Using server default.</div>';
+});
+
+// ---- Upload zone ----
+const dropZone = $("#dropZone");
+const fileInput = $("#fileInput");
+
+dropZone.addEventListener("click", () => fileInput.click());
+dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
+dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
+dropZone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dropZone.classList.remove("dragover");
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener("change", () => { if (fileInput.files.length) handleFile(fileInput.files[0]); });
+
+function handleFile(file) {
+  selectedFile = file;
+  $("#fileName").textContent = file.name;
+  $("#fileSize").textContent = formatSize(file.size);
+  $("#fileInfo").classList.remove("hidden");
+  $("#clearBtn").classList.remove("hidden");
+  $("#uploadBtn").disabled = false;
+}
+
+$("#clearBtn").addEventListener("click", () => {
+  selectedFile = null;
+  fileInput.value = "";
+  $("#fileInfo").classList.add("hidden");
+  $("#clearBtn").classList.add("hidden");
+  $("#uploadBtn").disabled = true;
+});
+
+// ---- Upload ----
+$("#uploadBtn").addEventListener("click", async () => {
+  if (!selectedFile) return;
+  const btn = $("#uploadBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Uploading...';
+
+  const form = new FormData();
+  form.append("file", selectedFile);
+
+  try {
+    const uploadHeaders = {};
+    const t = getLLMToken();
+    if (t) uploadHeaders["X-LLM-Key"] = t;
+    const res = await fetch(`${API}/reports/upload`, { method: "POST", body: form, headers: uploadHeaders });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Upload failed");
+    }
+    const data = await res.json();
+    sessionId = data.session_id;
+    renderResults(data);
+  } catch (e) {
+    alert("Upload error: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = "Upload &amp; Analyze";
+  }
+});
+
+// ---- Render results ----
+function renderResults(data) {
+  // Patient banner
+  const pb = $("#patientBanner");
+  const p = data.patient || {};
+  pb.innerHTML = `
+    <div class="field"><label>Patient</label><p>${esc(p.name || "—")}</p></div>
+    <div class="field"><label>Age</label><p>${p.age ?? "—"}</p></div>
+    <div class="field"><label>Gender</label><p>${esc(p.gender || "—")}</p></div>
+    <div class="field"><label>ID</label><p>${esc(p.patient_id || "—")}</p></div>
+    <div class="field"><label>Report Type</label><p>${esc(data.report_type)}</p></div>
+  `;
+
+  // Stats
+  const normal = data.result_count - data.abnormal_count;
+  $("#statsRow").innerHTML = `
+    <div class="stat-box stat-total"><div class="num">${data.result_count}</div><div class="label">Total Tests</div></div>
+    <div class="stat-box stat-normal"><div class="num">${normal}</div><div class="label">Normal</div></div>
+    <div class="stat-box stat-abnormal"><div class="num">${data.abnormal_count}</div><div class="label">Abnormal</div></div>
+  `;
+
+  // Table
+  const preview = data.preview || [];
+  if (preview.length) {
+    $("#resultsHead").innerHTML = `<tr><th>Test Name</th><th>Value</th><th>Unit</th><th>Reference Range</th><th>Flag</th></tr>`;
+    $("#resultsBody").innerHTML = preview.map(r => `
+      <tr>
+        <td>${esc(r.test_name)}</td>
+        <td>${esc(r.value)}</td>
+        <td>${esc(r.unit)}</td>
+        <td>${esc(r.reference_range)}</td>
+        <td class="flag-${r.flag}">${flagLabel(r.flag)}</td>
+      </tr>
+    `).join("");
+  } else {
+    $("#resultsHead").innerHTML = "";
+    $("#resultsBody").innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">No structured results extracted. Use AI analysis to interpret the report.</td></tr>`;
+  }
+
+  // Show results card and update chat context
+  $("#resultsCard").classList.remove("hidden");
+  $("#chatTitle").textContent = "Ask AI About This Report";
+  $("#chatSubtitle").textContent = "Ask follow-up questions about the uploaded report results.";
+  $("#chatInput").placeholder = "e.g. Are any of my liver values concerning?";
+  $("#disclaimerBar").classList.remove("hidden");
+  $("#disclaimerBar").textContent = "This analysis is generated by AI and is NOT a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider for medical decisions.";
+
+  // Scroll to results
+  $("#resultsCard").scrollIntoView({ behavior: "smooth" });
+}
+
+// ---- Summary ----
+$("#summaryBtn").addEventListener("click", async () => {
+  if (!sessionId) return;
+  const btn = $("#summaryBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Loading...';
+
+  try {
+    const res = await fetch(`${API}/reports/${sessionId}/summary`);
+    if (!res.ok) throw new Error("Failed to load summary");
+    const data = await res.json();
+
+    $("#statsRow").innerHTML = `
+      <div class="stat-box stat-total"><div class="num">${data.total_tests}</div><div class="label">Total Tests</div></div>
+      <div class="stat-box stat-normal"><div class="num">${data.normal_count}</div><div class="label">Normal</div></div>
+      <div class="stat-box stat-abnormal"><div class="num">${data.abnormal_count}</div><div class="label">Abnormal</div></div>
+    `;
+
+    const results = data.all_results || [];
+    if (results.length) {
+      $("#resultsHead").innerHTML = `<tr><th>Test Name</th><th>Value</th><th>Unit</th><th>Reference Range</th><th>Flag</th></tr>`;
+      $("#resultsBody").innerHTML = results.map(r => {
+        const isAbnormal = r.flag !== "normal";
+        const rowStyle = isAbnormal ? ' style="background:#fef2f2"' : '';
+        return `
+          <tr${rowStyle}>
+            <td>${isAbnormal ? '<strong>' : ''}${esc(r.test_name)}${isAbnormal ? '</strong>' : ''}</td>
+            <td>${esc(r.value)}</td>
+            <td>${esc(r.unit)}</td>
+            <td>${esc(r.reference_range)}</td>
+            <td class="flag-${r.flag}">${flagLabel(r.flag)}</td>
+          </tr>
+        `;
+      }).join("");
+    } else {
+      $("#resultsHead").innerHTML = "";
+      $("#resultsBody").innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">No structured results found.</td></tr>`;
+    }
+  } catch (e) {
+    alert(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = "View Full Summary";
+  }
+});
+
+// ---- New report ----
+$("#newReportBtn").addEventListener("click", () => {
+  sessionId = null;
+  selectedFile = null;
+  fileInput.value = "";
+  $("#fileInfo").classList.add("hidden");
+  $("#clearBtn").classList.add("hidden");
+  $("#uploadBtn").disabled = true;
+  $("#resultsCard").classList.add("hidden");
+  $("#disclaimerBar").classList.add("hidden");
+  $("#chatMessages").innerHTML = "";
+  $("#chatTitle").textContent = "Ask AI Doctor";
+  $("#chatSubtitle").textContent = "Describe your symptoms or ask any health-related question. Upload a report above for report-specific analysis.";
+  $("#chatInput").placeholder = "e.g. I have a headache and mild fever since 2 days...";
+  $("#uploadCard").scrollIntoView({ behavior: "smooth" });
+});
+
+// ---- Speech-to-Text (Mic) ----
+let sentViaMic = false;
+let sttLang = "en-US";
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+
+const langToggle = $("#langToggle");
+langToggle.addEventListener("click", () => {
+  if (sttLang === "en-US") {
+    sttLang = "hi-IN";
+    langToggle.textContent = "\u0939\u093F";
+    langToggle.classList.add("active-hi");
+    langToggle.title = "Speech language: Hindi \u2014 click to switch to English";
+  } else {
+    sttLang = "en-US";
+    langToggle.textContent = "EN";
+    langToggle.classList.remove("active-hi");
+    langToggle.title = "Speech language: English \u2014 click to switch to Hindi";
+  }
+});
+
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = sttLang;
+
+  const micBtn = $("#micBtn");
+  const chatInput = $("#chatInput");
+  let origPlaceholder = chatInput.placeholder;
+
+  micBtn.addEventListener("click", () => {
+    if (micBtn.classList.contains("recording")) {
+      recognition.stop();
+    } else {
+      recognition.lang = sttLang;
+      origPlaceholder = chatInput.placeholder;
+      chatInput.placeholder = sttLang === "hi-IN" ? "\u0938\u0941\u0928 \u0930\u0939\u093E \u0939\u0948..." : "Listening...";
+      chatInput.value = "";
+      micBtn.classList.add("recording");
+      recognition.start();
+    }
+  });
+
+  recognition.onresult = (e) => {
+    let transcript = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      transcript += e.results[i][0].transcript;
+    }
+    chatInput.value = transcript;
+  };
+
+  recognition.onend = () => {
+    micBtn.classList.remove("recording");
+    chatInput.placeholder = origPlaceholder;
+    if (chatInput.value.trim()) {
+      sentViaMic = true;
+      sendMessage();
+    }
+  };
+
+  recognition.onerror = (e) => {
+    micBtn.classList.remove("recording");
+    chatInput.placeholder = origPlaceholder;
+    if (e.error !== "no-speech") {
+      console.warn("Speech recognition error:", e.error);
+    }
+  };
+} else {
+  $("#micBtn").style.display = "none";
+  langToggle.style.display = "none";
+}
+
+// ---- Text-to-Speech ----
+function stripMarkdownForTTS(text) {
+  return text
+    .replace(/#{1,4}\s*/g, "")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^[\-\*]\s+/gm, "")
+    .replace(/^\d+\.\s+/gm, "")
+    .replace(/\n{2,}/g, ". ")
+    .replace(/\n/g, " ");
+}
+
+let _ttsKeepAlive = null;
+
+function _splitIntoChunks(text, maxLen = 180) {
+  const sentences = text.split(/(?<=[।.!?\n])\s*/);
+  const chunks = [];
+  let buf = "";
+  for (const s of sentences) {
+    if (buf.length + s.length > maxLen && buf.length > 0) {
+      chunks.push(buf.trim());
+      buf = "";
+    }
+    buf += s + " ";
+  }
+  if (buf.trim()) chunks.push(buf.trim());
+  return chunks;
+}
+
+function _stopSpeaking() {
+  window.speechSynthesis.cancel();
+  clearInterval(_ttsKeepAlive);
+  $$(".btn-speak.speaking").forEach(b => {
+    b.classList.remove("speaking");
+    b._isSpeaking = false;
+    b.innerHTML = '<span class="material-icons">volume_up</span> Listen';
+  });
+}
+
+function speakText(text, speakBtn) {
+  const wasSpeaking = speakBtn && speakBtn._isSpeaking;
+  _stopSpeaking();
+
+  if (wasSpeaking) return;
+
+  const plain = stripMarkdownForTTS(text);
+  const lang = /[\u0900-\u097F]/.test(plain) || sttLang === "hi-IN" ? "hi-IN" : "en-US";
+  const chunks = _splitIntoChunks(plain);
+  if (!chunks.length) return;
+
+  if (speakBtn) {
+    speakBtn.classList.add("speaking");
+    speakBtn._isSpeaking = true;
+    speakBtn.innerHTML = '<span class="material-icons">stop</span> Stop';
+  }
+
+  _ttsKeepAlive = setInterval(() => {
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.pause();
+      window.speechSynthesis.resume();
+    }
+  }, 5000);
+
+  chunks.forEach((chunk, i) => {
+    const utt = new SpeechSynthesisUtterance(chunk);
+    utt.lang = lang;
+    utt.rate = 1;
+    utt.pitch = 1;
+
+    if (i === chunks.length - 1) {
+      utt.onend = () => {
+        clearInterval(_ttsKeepAlive);
+        if (speakBtn) {
+          speakBtn.classList.remove("speaking");
+          speakBtn._isSpeaking = false;
+          speakBtn.innerHTML = '<span class="material-icons">volume_up</span> Listen';
+        }
+      };
+    }
+
+    utt.onerror = () => {
+      clearInterval(_ttsKeepAlive);
+      if (speakBtn) {
+        speakBtn.classList.remove("speaking");
+        speakBtn._isSpeaking = false;
+        speakBtn.innerHTML = '<span class="material-icons">volume_up</span> Listen';
+      }
+    };
+
+    window.speechSynthesis.speak(utt);
+  });
+}
+
+function addSpeakButton(aiMsg, fullText) {
+  const btn = document.createElement("button");
+  btn.className = "btn-speak";
+  btn.innerHTML = '<span class="material-icons">volume_up</span> Listen';
+  btn.addEventListener("click", () => speakText(fullText, btn));
+  aiMsg.appendChild(btn);
+  return btn;
+}
+
+// ---- Chat ----
+$("#sendBtn").addEventListener("click", () => { sentViaMic = false; sendMessage(); });
+$("#chatInput").addEventListener("keydown", (e) => { if (e.key === "Enter") { sentViaMic = false; sendMessage(); } });
+
+async function sendMessage() {
+  const input = $("#chatInput");
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  input.value = "";
+  appendMsg("user", msg);
+
+  const provider = $("#providerSelect").value || null;
+  $("#sendBtn").disabled = true;
+  $("#chatInput").disabled = true;
+
+  const aiMsg = appendMsg("ai", "");
+  aiMsg.innerHTML = `<div class="ai-thinking">
+    <div class="ai-thinking-dots"><span></span><span></span><span></span></div>
+    <span class="ai-thinking-text">Analyzing your query...</span>
+  </div>`;
+
+  const endpoint = sessionId
+    ? `${API}/reports/${sessionId}/analyze/stream`
+    : `${API}/chat/stream`;
+
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: llmHeaders(),
+      body: JSON.stringify({ message: msg, provider }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || "Analysis failed");
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let text = "";
+    aiMsg.textContent = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      text += decoder.decode(value, { stream: true });
+      aiMsg.innerHTML = renderMarkdown(text);
+      scrollChat();
+    }
+
+    const speakBtn = addSpeakButton(aiMsg, text);
+
+    if (sentViaMic) {
+      speakText(text, speakBtn);
+      sentViaMic = false;
+    }
+
+    const disc = document.createElement("div");
+    disc.className = "msg msg-disclaimer";
+    disc.textContent = "This is AI-generated analysis. Always consult a healthcare professional.";
+    $("#chatMessages").appendChild(disc);
+    scrollChat();
+
+  } catch (e) {
+    aiMsg.textContent = "Error: " + e.message;
+    aiMsg.style.color = "var(--danger)";
+  } finally {
+    $("#sendBtn").disabled = false;
+    $("#chatInput").disabled = false;
+    $("#chatInput").focus();
+  }
+}
+
+function appendMsg(role, text) {
+  const div = document.createElement("div");
+  div.className = `msg msg-${role}`;
+  div.textContent = text;
+  $("#chatMessages").appendChild(div);
+  scrollChat();
+  return div;
+}
+
+function scrollChat() {
+  const c = $("#chatMessages");
+  c.scrollTop = c.scrollHeight;
+}
+
+// ---- Helpers ----
+function esc(s) {
+  const d = document.createElement("div");
+  d.textContent = s || "";
+  return d.innerHTML;
+}
+
+function flagLabel(f) {
+  const labels = { normal: "Normal", high: "HIGH", low: "LOW", critical_high: "CRITICAL HIGH", critical_low: "CRITICAL LOW", abnormal: "ABNORMAL" };
+  return labels[f] || f;
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+  return (bytes / 1048576).toFixed(1) + " MB";
+}
+
+function renderMarkdown(raw) {
+  let html = esc(raw);
+
+  // Headers: ### heading
+  html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+  // Bold: **text**
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+  // Italic: *text*
+  html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+
+  // Inline code: `text`
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Unordered lists: - item or * item
+  html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+
+  // Ordered lists: 1. item
+  html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+
+  // Wrap consecutive <li> in <ul>
+  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+
+  // Paragraphs: double newlines
+  html = html.replace(/\n{2,}/g, '</p><p>');
+
+  // Single newlines within text become <br>
+  html = html.replace(/\n/g, '<br>');
+
+  // Clean up: remove <br> right after block elements
+  html = html.replace(/<\/(h[1-4]|ul|ol|li)><br>/g, '</$1>');
+  html = html.replace(/<br><(h[1-4]|ul|ol)/g, '<$1');
+
+  return '<p>' + html + '</p>';
+}
+
+</script>
+</body>
+</html>
