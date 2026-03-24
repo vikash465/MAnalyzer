@@ -486,10 +486,81 @@
   .hidden { display: none !important; }
 
   /* ---- Responsive ---- */
-  @media (max-width: 600px) {
-    header { padding: 1rem; }
-    .container { padding: 0 1rem; }
-    .msg { max-width: 95%; }
+
+  @media (max-width: 768px) {
+    header { padding: 0.9rem 1rem; gap: 0.5rem; flex-wrap: wrap; }
+    header svg { width: 26px; height: 26px; }
+    header h1 { font-size: 1.15rem; }
+    header > span { font-size: 0.75rem; }
+    .btn-settings { padding: 0.3rem 0.5rem; }
+
+    .container { margin: 1rem auto; padding: 0 0.75rem; gap: 1rem; }
+
+    .card { padding: 1rem; border-radius: 10px; }
+    .card h2 { font-size: 1rem; }
+
+    .upload-zone { padding: 1.5rem 0.75rem; }
+
+    .patient-banner {
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 0.6rem;
+      padding: 0.75rem;
+    }
+    .patient-banner .field label { font-size: 0.68rem; }
+    .patient-banner .field p { font-size: 0.85rem; }
+
+    .stats { gap: 0.5rem; }
+    .stat-box { min-width: 90px; padding: 0.7rem 0.5rem; }
+    .stat-box .num { font-size: 1.4rem; }
+    .stat-box .label { font-size: 0.72rem; }
+
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { font-size: 0.8rem; min-width: 500px; }
+    th, td { padding: 0.45rem 0.5rem; }
+
+    .chat-messages { max-height: 350px; }
+    .msg { max-width: 92%; font-size: 0.85rem; padding: 0.6rem 0.85rem; }
+    .msg-ai { max-width: 95%; }
+
+    .chat-input-row {
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .chat-input-row .provider-select {
+      order: 5;
+      width: 100%;
+      font-size: 0.8rem;
+      padding: 0.45rem 0.6rem;
+    }
+    .chat-input-row input {
+      flex: 1;
+      min-width: 0;
+      font-size: 0.85rem;
+      padding: 0.55rem 0.75rem;
+    }
+    .btn-mic { width: 38px; height: 38px; }
+    .btn-lang { width: 32px; height: 32px; font-size: 0.65rem; }
+    .btn { padding: 0.55rem 1rem; font-size: 0.85rem; }
+
+    .btn-row { gap: 0.5rem; }
+    .btn-row .btn { flex: 1; justify-content: center; font-size: 0.82rem; padding: 0.55rem 0.6rem; }
+
+    .modal { padding: 1.25rem; width: 95%; }
+
+    .disclaimer-bar { font-size: 0.75rem; padding: 0.6rem 0.75rem; }
+  }
+
+  @media (max-width: 380px) {
+    header h1 { font-size: 1rem; }
+    header > span { display: none; }
+
+    .stat-box .num { font-size: 1.2rem; }
+    .stat-box { min-width: 80px; padding: 0.5rem; }
+
+    .chat-input-row input { font-size: 0.82rem; }
+    .btn-lang { width: 28px; height: 28px; font-size: 0.6rem; }
+    .btn-mic { width: 34px; height: 34px; }
+    .btn-mic .material-icons { font-size: 18px; }
   }
 </style>
 </head>
